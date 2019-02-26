@@ -325,7 +325,7 @@ const createRemoveCommands = (packetsToRemove, initial) => {
         })
     })
 
-    const removeSatNumbers = topological(nodes, count)//.reverse()
+    const removeSatNumbers = topological(nodes, count).reverse()
     const commands = removeSatNumbers.map(element => `-${satNumber[element].formattedName()}`)
     const newInitial = initial.filter(item => !packetsToRemove.includes(item))
     const cost = removeSatNumbers.length * 1000000
