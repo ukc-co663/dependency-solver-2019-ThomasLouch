@@ -250,9 +250,10 @@ const runSolver = (cnf) => {
     } catch(e) { }
 
     const data = fs.readFileSync('./solution.txt', 'utf8', () => {})
+
     // If our minisat has not worked then fall back to the JS transpiled version
     data ? result = data : result = solveString(cnfString, cnfString.length)
-        
+
     if (result.substring(0,3) !== successCode) throw 'Unsatisfiable CNF'
 
     const satNumbers = result.substring(4).split(' ')
@@ -283,7 +284,7 @@ const topological = (nodes, count) => {
         const node = toRemove.pop()
         output.push(node)
         nodes.get(node).forEach(outgoing => {
-            const newCount = (count.get(outgoing) || 0) + 1
+            const newCount = (count.get(outgoing) || 0) - 1
             count.set(outgoing, newCount)
             if (!count.get(outgoing) && !toRemove.includes(outgoing)) insortLeft(toRemove, outgoing)
         })
@@ -317,7 +318,7 @@ const createRemoveCommands = (packetsToRemove, initial) => {
                     nodes.set(depedency.satNumber, initialValue)
 
                     let currentCount = count.get(package.satNumber) || 0
-                    let newCount = currentCount++
+                    let newCount = currentCount + 1
                     count.set(package.satNumber, newCount)
                 }
             })
@@ -360,7 +361,7 @@ const createAddCommands = (packetsToAdd, initial = []) => {
                         nodes.set(depedency.satNumber, current)
                         
                         let currentCount = count.get(package.satNumber) || 0
-                        let newCount = currentCount++
+                        let newCount = currentCount + 1
                         count.set(package.satNumber, newCount)
 
                         fulfilled = true
@@ -455,9 +456,9 @@ const r = require('./' + process.argv[2])
 const i = require('./' + process.argv[3])
 const c = require('./' + process.argv[4])
 
-// const r = require('./tests/seen-4/repository.json')
-// const i = require('./tests/seen-4/initial.json')
-// const c = require('./tests/seen-4/constraints.json')
+// const r = require('./tests/seen-3/repository.json')
+// const i = require('./tests/seen-3/initial.json')
+// const c = require('./tests/seen-3/constraints.json')
 
 const [repository, initial, install, uninstall] =  parse(r, i, c)
 
