@@ -455,9 +455,9 @@ const r = require('./' + process.argv[2])
 const i = require('./' + process.argv[3])
 const c = require('./' + process.argv[4])
 
-//const r = require('../tests/seen-4/repository.json')
-//const i = require('../tests/seen-4/initial.json')
-//const c = require('../tests/seen-4/constraints.json')
+// const r = require('../tests/seen-4/repository.json')
+// const i = require('../tests/seen-4/initial.json')
+// const c = require('../tests/seen-4/constraints.json')
 
 const [repository, initial, install, uninstall] =  parse(r, i, c)
 
