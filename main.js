@@ -388,18 +388,19 @@ const createAddCommands = (packetsToAdd, initial = []) => {
  * @return {[Array, Array]} An array of the rationalised packets to add and remove
  */
 const rationalise = (add, remove, uninstall) => {
-    const uninstallNames = uninstall.map(element => element.name)
-    let rationalisedRemoved = []
-    remove.forEach(removePackage => {
-        if (!uninstallNames.includes(removePackage.name)) {
-            add.forEach(addPackage => {
-                if (addPackage.conflicts.includes(removePackage)) {
-                    rationalisedRemoved.push(removePackage)
-                }
-            })
-        } else rationalisedRemoved.push(removePackage)
-    })
-    return [add, rationalisedRemoved]
+
+    let removeRationalised = remove.filter(element => uninstall.includes(element))
+    let removeRationalisedConflicts = []
+
+    for (let ap = 0; ap < add.length; ap++) {
+        for (let rp = 0; rp < removeRationalised.length; rp++) {
+            if (!add[ap].conflicts.includes(removeRationalised[rp])) {
+                removeRationalisedConflicts.push(removeRationalised[rp])
+            }
+        }
+    }
+
+    return [add, removeRationalisedConflicts]
 }
 
 /**
