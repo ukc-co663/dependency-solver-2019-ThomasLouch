@@ -381,29 +381,6 @@ const createAddCommands = (packetsToAdd, initial = []) => {
 }
 
 /**
- * Remove any redundant installations
- * @param {Array} add An array of packages to add
- * @param {Array} remove An array of packages to remove
- * @param {Array} uninstall An array of uninstall constraints
- * @return {[Array, Array]} An array of the rationalised packets to add and remove
- */
-const rationalise = (add, remove, uninstall) => {
-
-    let removeRationalised = remove.filter(element => uninstall.includes(element))
-    let removeRationalisedConflicts = []
-
-    for (let ap = 0; ap < add.length; ap++) {
-        for (let rp = 0; rp < removeRationalised.length; rp++) {
-            if (!add[ap].conflicts.includes(removeRationalised[rp])) {
-                removeRationalisedConflicts.push(removeRationalised[rp])
-            }
-        }
-    }
-
-    return [add, removeRationalisedConflicts]
-}
-
-/**
  * Finds all solutions to a problem by running a SAT solver and then returns
  * The commands to perform the lowest cost solution
  * @param {Array} repository The repository
@@ -418,7 +395,7 @@ const solveCnf = (repository, initial, install, uninstall) => {
 
     while (true) {
         try {
-            let [addP, removeP] = rationalise(...runSolver(cnf), uninstall)
+            let [addP, removeP] = runSolver(cnf)
             let [removeCommands, newInitial, removeCost] = createRemoveCommands(removeP, initial)
             let [addCommands, _, addCost] = createAddCommands(addP, newInitial)
 
@@ -494,7 +471,7 @@ const [repository, initial, install, uninstall] =  parse(r, i, c)
 if(satNumber.length > 50000) {
 	let cnf = convertToCnf(repository, install, uninstall)
 	let addP, removeP, removeCommands, addCommands, newInitial
-	setTimeout(() => { [addP, removeP] = rationalise(...runSolver(cnf), uninstall) }, 0)
+	setTimeout(() => { [addP, removeP] = runSolver(cnf) }, 0)
 	setTimeout(() => { [removeCommands, newInitial, _] = createRemoveCommands(removeP, initial) }, 0)
 	setTimeout(() => { [addCommands, _, _] = createAddCommands(addP, newInitial) }, 0)
 	setTimeout(() => {
