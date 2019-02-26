@@ -381,6 +381,28 @@ const createAddCommands = (packetsToAdd, initial = []) => {
 }
 
 /**
+ * Remove any redundant installations
+ * @param {Array} add An array of packages to add
+ * @param {Array} remove An array of packages to remove
+ * @param {Array} uninstall An array of uninstall constraints
+ * @return {[Array, Array]} An array of the rationalised packets to add and remove
+ */
+const rationalise = (add, remove, uninstall) => {
+    const uninstallNames = uninstall.map(element => element.name)
+    let rationalisedRemoved = []
+    remove.forEach(removePackage => {
+        if (!uninstallNames.includes(removePackage.name)) {
+            add.forEach(addPackage => {
+                if (addPackage.conflicts.includes(removePackage)) {
+                    rationalisedRemoved.push(removePackage)
+                }
+            })
+        } else rationalisedRemoved.push(removePackage)
+    })
+    return [add, rationalisedRemoved]
+}
+
+/**
  * Finds all solutions to a problem by running a SAT solver and then returns
  * The commands to perform the lowest cost solution
  * @param {Array} repository The repository
@@ -395,7 +417,7 @@ const solveCnf = (repository, initial, install, uninstall) => {
 
     while (true) {
         try {
-            let [addP, removeP] = runSolver(cnf)
+            let [addP, removeP] = rationalise(...runSolver(cnf), uninstall)
             let [removeCommands, newInitial, removeCost] = createRemoveCommands(removeP, initial)
             let [addCommands, _, addCost] = createAddCommands(addP, newInitial)
 
@@ -455,9 +477,9 @@ const r = require('./' + process.argv[2])
 const i = require('./' + process.argv[3])
 const c = require('./' + process.argv[4])
 
-// const r = require('../tests/seen-4/repository.json')
-// const i = require('../tests/seen-4/initial.json')
-// const c = require('../tests/seen-4/constraints.json')
+// const r = require('./tests/seen-4/repository.json')
+// const i = require('./tests/seen-4/initial.json')
+// const c = require('./tests/seen-4/constraints.json')
 
 const [repository, initial, install, uninstall] =  parse(r, i, c)
 
@@ -471,7 +493,7 @@ const [repository, initial, install, uninstall] =  parse(r, i, c)
 if(satNumber.length > 50000) {
 	let cnf = convertToCnf(repository, install, uninstall)
 	let addP, removeP, removeCommands, addCommands, newInitial
-	setTimeout(() => { [addP, removeP] = runSolver(cnf) }, 0)
+	setTimeout(() => { [addP, removeP] = rationalise(...runSolver(cnf), uninstall) }, 0)
 	setTimeout(() => { [removeCommands, newInitial, _] = createRemoveCommands(removeP, initial) }, 0)
 	setTimeout(() => { [addCommands, _, _] = createAddCommands(addP, newInitial) }, 0)
 	setTimeout(() => {
