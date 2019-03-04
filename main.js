@@ -436,7 +436,7 @@ const solveCnf = (repository, initial, install, uninstall) => {
 
         } catch (e) {
             if (e === 'Topological sorting error') cnf = updateCnf(cnf, addP)
-            break
+            else break
         }
     }
 
