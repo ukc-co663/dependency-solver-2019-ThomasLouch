@@ -300,8 +300,15 @@ const topological = (nodes, count) => {
  * @return {[Array, Array, Number]} An array containing the installation commands,
  *  the new initial state and the total cost of the removal commands
  */
-const createRemoveCommands = (packetsToRemove, initial) => {
-    const rationalised = packetsToRemove.filter(item => initial.includes(item))
+const createRemoveCommands = (packetsToRemove, packetsToAdd, initial, uninstall) => {
+    let rationalised = packetsToRemove.filter(item => initial.includes(item)) // TODO - can do less verbose
+    rationalised = rationalised.filter(removePackage => {
+        let remove = uninstall.includes(item)
+        packetsToAdd.forEach(addPackage => {
+            if (addPackage.conflicts.includes(removePackage)) remove = true
+        })
+        return remove
+    })
 
     let nodes = new Map(), count = new Map()
     rationalised.forEach(item => {
@@ -415,7 +422,7 @@ const solveCnf = (repository, initial, install, uninstall) => {
     while (true) {
         try {
             [addP, removeP] = runSolver(cnf)
-            let [removeCommands, newInitial, removeCost] = createRemoveCommands(removeP, initial)
+            let [removeCommands, newInitial, removeCost] = createRemoveCommands(removeP, addP, initial, uninstall)
             let [addCommands, _, addCost] = createAddCommands(addP, newInitial)
 
             // Add this solution as a NOT to the end of the CNF
