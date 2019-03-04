@@ -382,6 +382,23 @@ const createAddCommands = (packetsToAdd, initial = []) => {
 }
 
 /**
+ * Updates the CNF by inverting all the add commands and adding them
+ * as an additional clause in order to try another solution
+ * @param {Array} cnf The CNF array 
+ * @param {Array} addP The array of packages to add
+ */
+const updateCnf = (cnf, addP) => {
+    let updated = cnf.slice(0)
+    let subClause = []
+
+    updated.shift()
+    addP.forEach(element => subClause.push(-element.satNumber))
+    updated.push(subClause.join(" ") + ' 0\n')
+    updated.unshift(`p cnf ${satNumber.length - 1} ${cnf.length}\n`)
+    return updated
+}
+
+/**
  * Finds all solutions to a problem by running a SAT solver and then returns
  * The commands to perform the lowest cost solution
  * @param {Array} repository The repository
@@ -393,22 +410,16 @@ const solveCnf = (repository, initial, install, uninstall) => {
     let cnf = convertToCnf(repository, install, uninstall)
     let lowestCost = -1
     let lowestCommands = []
+    let addP, removeP
 
     while (true) {
         try {
-            let [addP, removeP] = runSolver(cnf)
+            [addP, removeP] = runSolver(cnf)
             let [removeCommands, newInitial, removeCost] = createRemoveCommands(removeP, initial)
             let [addCommands, _, addCost] = createAddCommands(addP, newInitial)
 
             // Add this solution as a NOT to the end of the CNF
-            let updated = cnf.slice(0)
-            let subClause = []
-
-            updated.shift()
-            addP.forEach(element => subClause.push(-element.satNumber))
-            updated.push(subClause.join(" ") + ' 0\n')
-            updated.unshift(`p cnf ${satNumber.length - 1} ${cnf.length}\n`)
-            cnf = updated
+            cnf = updateCnf(cnf, addP)
 
             // If this solution has the lowest cost so far, update the lowest values
             if ((lowestCost === -1) || ((addCost + removeCost) < lowestCost)) {
@@ -417,6 +428,7 @@ const solveCnf = (repository, initial, install, uninstall) => {
             }
 
         } catch (e) {
+            if (e === 'Topological sorting error') cnf = updateCnf(cnf, addP)
             break
         }
     }
