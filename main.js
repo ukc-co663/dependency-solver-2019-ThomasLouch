@@ -492,7 +492,7 @@ if(satNumber.length > 50000) {
 	let cnf = convertToCnf(repository, install, uninstall)
 	let addP, removeP, removeCommands, addCommands, newInitial
 	setTimeout(() => { [addP, removeP] = runSolver(cnf) }, 0)
-	setTimeout(() => { [removeCommands, newInitial, _] = createRemoveCommands(removeP, initial) }, 0)
+	setTimeout(() => { [removeCommands, newInitial, _] = createRemoveCommands(removeP, addP, initial, uninstall) }, 0)
 	setTimeout(() => { [addCommands, _, _] = createAddCommands(addP, newInitial) }, 0)
 	setTimeout(() => {
 		const commands = removeCommands.concat(addCommands)
