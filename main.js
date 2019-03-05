@@ -2,6 +2,7 @@ const fs = require('fs')
 const { execSync } = require('child_process')
 
 const Minisat = require('./lib/minisat.js')
+const sat = require('./lib/unsat.js')
 const solveString = Minisat.cwrap('solve_string', 'string', ['string', 'number']);
 
 // All of the packages in the repository ordered by their SAT number
@@ -436,7 +437,11 @@ const solveCnf = (repository, initial, install, uninstall) => {
 
         } catch (e) {
             if (e === 'Topological sorting error') cnf = updateCnf(cnf, addP)
-            else break
+            else {
+                let alt = sat(satNumber)
+                if (alt.length && !lowestCommands.length) lowestCommands = alt
+                break
+            }
         }
     }
 
@@ -481,27 +486,8 @@ const c = require('./' + process.argv[4])
 
 const [repository, initial, install, uninstall] =  parse(r, i, c)
 
-/**
- * If the number of packages is too high then we just search for any solution,
- * instead of the most optimal.
- * 
- * Command generation is chained in setTimeout in order to constantly clear the stack
- * and prevent any memory issues we may run into with large repositories
- */
-if(satNumber.length > 50000) {
-	let cnf = convertToCnf(repository, install, uninstall)
-	let addP, removeP, removeCommands, addCommands, newInitial
-	setTimeout(() => { [addP, removeP] = runSolver(cnf) }, 0)
-	setTimeout(() => { [removeCommands, newInitial, _] = createRemoveCommands(removeP, addP, initial, uninstall) }, 0)
-	setTimeout(() => { [addCommands, _, _] = createAddCommands(addP, newInitial) }, 0)
-	setTimeout(() => {
-		const commands = removeCommands.concat(addCommands)
-		console.log('%j', commands)
-	}, 0)
-} else {
-	const commands = solveCnf(repository, initial, install, uninstall)
-	console.log('%j', commands)
-}
+const commands = solveCnf(repository, initial, install, uninstall)
+console.log('%j', commands)
 
 //const json = JSON.stringify(commands)
 //fs.writeFile('commands.json', json, 'utf8', () => {})
